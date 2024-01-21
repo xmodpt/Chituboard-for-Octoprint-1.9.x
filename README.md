@@ -1,4 +1,9 @@
-# Octoprint-Chituboard
+# Octoprint-Chituboard - FIXED 
+
+
+Please note:
+This is a Fixed version of the original Chituboard from Rudetrooper
+
 Added basic support for chituboard based printers(Elegoo Mars, Anycubic Photon, Phrozen, etc.) to octoprint.
 * upload files to folder `~/.octoprint/uploads/resin`
 * pause and resume are still somewhat buggy due to a timeout issue
