@@ -63,7 +63,7 @@
     
 17- Download "CHITUBOARD" Config script
 
-    $ sudo wget https://raw.githubusercontent.com/xmodpt/chituboard/main/Chituboard.sh
+    $ sudo wget https://raw.githubusercontent.com/xmodpt/Chituboard-for-Octoprint-1.9.x/main/Chituboard.sh
     
 18- Make the script executable
 
