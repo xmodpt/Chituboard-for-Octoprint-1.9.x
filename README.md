@@ -1,7 +1,7 @@
 # Octoprint-Chituboard - FIXED 
 
 
-Please note:
+## Please note:
 This is a Fixed version of the original Chituboard from Rudetrooper
 
 Added basic support for chituboard based printers(Elegoo Mars, Anycubic Photon, Phrozen, etc.) to octoprint.
@@ -11,18 +11,11 @@ Added basic support for chituboard based printers(Elegoo Mars, Anycubic Photon, 
 * Plugin might not work if you've updated your Elegoo Mars printer to the newest firmware due to issues with Chitu3d encrypting their files so users are forced to use Chitubox 1.9.0. I'm not planning on incorporating the non FOSS chitubox SDK into an AGPLv3 licensed plugin.
 * Todo: write model viewer to display layer slices and relevant info. Anyone is welcome to take this on, I'm terrible at javascript
 
-## Setup video
-A user made a nice multi part setup video explaining how to set it up, I reccomend using a Raspberry Pi Zero 2W since its significantly more powerful.
-
-Part 1: https://youtu.be/WtDkcHgXEX8
-
-Part 2: https://youtu.be/1j9HFumHR-c
-
 ## Hardware setup
 Hardware setup instructions
 
 ### Requirements
-1. **Raspberry Pi Zero W(not reccomended underpowered), Zero 2 W, 3A+ or 4B** only supports raspberry pi's with USB-OTG ports
+1. **Raspberry Pi Zero 2 W, 3A+ or 4B** only supports raspberry pi's with USB-OTG ports
 2. Supported printers: SLA printers with chitu3d mainboards or Anycubic mainboards
   * Anycubic Photon
   * Elegoo Mars
@@ -85,9 +78,14 @@ It will set up a folder on the Pi as a USB drive using the USB-OTG, create a sam
 Follow the prompts in the script [How to Install Octoprint with an SLA printer.txt](https://raw.githubusercontent.com/xmodpt/Chituboard-for-Octoprint-1.9.x/main/How%20to%20install%20OCTOPRINT%20with%20SLA%20Printer.txt) 
 
 ## Change octoprint settings
-Modify config.yaml to match these settings
+Modify config.yaml to match these settings that you can find in '$ ./octoprint/config.yalm'
+
 * Todo: finish writing settings mixin stuff so this can be configure during plugin install  
 ```yaml
+
+### find in your config.yalm the section named serial: , delete everything and past the following
+c
+
 serial:  
   abortHeatupOnCancel: false  
   additionalPorts:  
