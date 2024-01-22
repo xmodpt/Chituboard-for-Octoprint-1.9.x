@@ -1,0 +1,115 @@
+***** Ontoprint for SLA printers ******
+***************************************
+********* Document Ver. 2.0 ***********
+
+1- Download and install Octoprint from Raspberry PI Imager App
+    https://www.raspberrypi.com/software/
+
+2- Install and ran Raspberry PI OS Imager App
+
+3- Select what Raspberry Pi you are using
+
+4- Chose OS
+     - Other Specific Purpose OS
+     - Select “3D Printing”
+     - Select “OctoPI”
+    - Select “Octopi 1.0.0 Ocroprint 1.9.2 - STABLE”
+
+5- Insert SD Card in to your card reader
+
+6- Select SD Card Storage
+
+7- On the next screen select/activate
+      - "SET HOST NAME" chose the name for your raspberry pi (Use default)
+      - "ENABLE SSH" - Choose your username and password for SSH access
+                                  Default: User: pi      password: raspberry
+      - "CONFIGURE WIFI" - Type the name and password of your WIFI 
+         note: if you use a laptop and it is connected to the same WIFI, this field will auto-fill with your details)
+      - Press "SAVE"
+
+8- Press "WRITE" to start the OS installation into your SD Card
+
+9- Plug your SD CARD on to the Raspberry PI and power up the PI
+   Note: if all goes as planned, the lights should start blinking
+         If no green light starts, change to a different SD CARD and start again.
+
+10- Use a "network scanner" to scan your network for your PI's IP ADDRESS.
+    NOTE: in my case, i am using NetScan (https://www.softperfect.com/products/networkscanner/) but you can use any like Angry IP Scanner
+
+11- Write down your PI's IP Address
+
+12- Open your Webrowser and navigate to the PI's ip address
+
+13- Complete Octoprint Wizard 
+
+14- Download Putty for SSH connection to the PI
+     https://www.chiark.greenend.org.uk/~sgtatham/putty/latest.html
+
+15- Open Putty and type your PI's IP ADDRESS, select SSH and press "OPEN"
+
+16- The PI's credentials are:
+
+            User: pi (or use the one to created on step 7)
+            Password: (your password you choose on step 7)
+
+17- SSH again to the PI and type:
+
+    $ sudo apt-get update && sudo apt-get upgrade
+
+16- *********** COFFEE BREAK ***********
+    
+17- Download "CHITUBOARD" Config script
+
+    $ sudo wget https://raw.githubusercontent.com/xmodpt/chituboard/main/Chituboard.sh
+    
+18- Make the script executable
+
+    $ sudo chmod +x ./Chituboard.sh
+
+19- Execute the script
+
+    $ sudo bash ./Chituboard.sh
+
+20- Follow the prompts and reboot (to the prompt "CHANGE PASSWORD" select NO)
+
+21- *********** COFFEE BREAK *********** 
+
+22- To the SAMBA Prompt Answer " NO "
+
+23- Select "Yes" for Reboot
+
+24- SSH again to the PI
+
+25- Configure Serial Port
+
+    $ sudo raspi-config
+    
+        º Select option 3   (Interfaces)
+        º Select option 6   (Serial)
+        º Select option " NO "
+        º Select option " YES "
+        º Select option " OK "
+        º Select option " FINISH "
+
+28- Open your Web browser and login to the PI and Install “Octoprint Chituboard” plugin
+
+        º Go to "SETTINGS"
+        º Go to "PLUGIN MANAGER"
+        º Go to " + GET MORE "
+        º Search for " CHITUBOARD "
+        º Install Plugin
+
+29- *********** COFFEE BREAK *********** 
+
+30- Test connection from Raspberry pi to Octoprint      
+                   
+                   The END =D
+                   
+*************************************************************************
+
+    Some reference sites
+
+    Troubleshooting  -->  https://mariner.readthedocs.io/en/latest/troubleshooting.html
+    Official Octoprint-Chituboard site --> https://plugins.octoprint.org/plugins/Chituboard/
+    USB cable hack --> https://community.octoprint.org/t/put-tape-on-the-5v-pin-why-and-how/13574
+    Original SLA app --> https://l9o.dev/posts/controlling-an-elegoo-mars-pro-remotely/     
