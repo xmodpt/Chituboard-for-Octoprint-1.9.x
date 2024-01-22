@@ -7,7 +7,7 @@
 This is a Fixed version of the original Chituboard from Rudetrooper
 
 ### Changes
-* Improved instalation script
+* Improved installation script
 * "Fixed" the issue with the webcam not showing after Octoprint upgrade 1.9.x
 
 ### Info
