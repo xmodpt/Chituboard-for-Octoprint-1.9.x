@@ -1,3 +1,5 @@
+![CrAzY RaBbIt](logo.png)
+
 # Octoprint-Chituboard - FIXED 
 
 
