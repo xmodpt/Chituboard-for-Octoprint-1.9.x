@@ -3,9 +3,14 @@
 # Octoprint-Chituboard - FIXED 
 
 
-## Please note:
+### Please note:
 This is a Fixed version of the original Chituboard from Rudetrooper
 
+### Changes
+* Improved instalation script
+* "Fixed" the issue with the webcam not showing after Octoprint upgrade 1.9.x
+
+### Info
 Added basic support for chituboard based printers(Elegoo Mars, Anycubic Photon, Phrozen, etc.) to octoprint.
 * upload files to folder `~/.octoprint/uploads/resin`
 * pause and resume are still somewhat buggy due to a timeout issue
