@@ -76,24 +76,13 @@ This is a potential UART port on the Photon zero motherboard. I think its for th
 
 
 
-
 ## Raspberry pi flash drive setup  
 This script is intended for a fresh octopi installation on a Raspberry Pi Zero or raspberry pi 4
 
 It will set up a folder on the Pi as a USB drive using the USB-OTG, create a sambashare, and a couple other things.
 
-### Download
-Either from this Github or using
-`wget https://raw.githubusercontent.com/rudetrooper/Octoprint-Chituboard/main/Chituboard.sh`
-
-### Prepare for execution
-`sudo chmod +x ./Chituboard.sh`
-
-### Execute
-`sudo bash ./Chituboard.sh`
-
-Follow the prompts in the script, reboot, and run once more.
-You should see a different set of prompts on the second run
+### Instalation
+Follow the prompts in the script [How to Install Octoprint with an SLA printer.txt](https://raw.githubusercontent.com/xmodpt/Chituboard-for-Octoprint-1.9.x/main/How%20to%20install%20OCTOPRINT%20with%20SLA%20Printer.txt) 
 
 ## Change octoprint settings
 Modify config.yaml to match these settings
