@@ -78,7 +78,7 @@ It will set up a folder on the Pi as a USB drive using the USB-OTG, create a sam
 Follow the prompts in the script [How to Install Octoprint with an SLA printer.txt](https://raw.githubusercontent.com/xmodpt/Chituboard-for-Octoprint-1.9.x/main/How%20to%20install%20OCTOPRINT%20with%20SLA%20Printer.txt) 
 
 ## Change octoprint settings
-Modify config.yaml to match these settings that you can find in '$ ./octoprint/config.yalm' and delete it and past the following code
+Modify config.yaml to match these settings that you can find in ```$ ./octoprint/config.yalm```
 
 * Todo: finish writing settings mixin stuff so this can be configure during plugin install  
 ```yaml
