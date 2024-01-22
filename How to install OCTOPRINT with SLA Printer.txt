@@ -22,7 +22,10 @@
 7- On the next screen select/activate
       - "SET HOST NAME" chose the name for your raspberry pi (Use default)
       - "ENABLE SSH" - Choose your username and password for SSH access
-                                  Default: User: pi      password: raspberry
+
+         Default: 
+         User: pi      password: raspberry
+
       - "CONFIGURE WIFI" - Type the name and password of your WIFI 
          note: if you use a laptop and it is connected to the same WIFI, this field will auto-fill with your details)
       - Press "SAVE"
