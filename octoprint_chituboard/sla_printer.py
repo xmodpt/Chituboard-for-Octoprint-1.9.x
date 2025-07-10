@@ -3,7 +3,6 @@
 import os, sys, glob
 import re
 
-from past.builtins import basestring, long
 from octoprint.events import Events, eventManager
 from octoprint.filemanager import FileDestinations, NoSuchStorage, valid_file_type, full_extension_tree
 from octoprint.printer.standard import Printer
@@ -30,48 +29,9 @@ import quopri
 import logging
 from .file_formats.utils import get_file_format	
 
-# ~ from octoprint.settings import settings
-
 #################################################################################################
 #                                   Sla printer class                                           #
 #################################################################################################
-
-
-""" 
-TODO:
--bin to sd upload enable
--try to use sd upload
--block normal printing
-
--sd upload file transfer karpern and after settings decide whether serial upload / udp upload or move to flash image
-(can't flash image be the same as an upload directory? )
-
--handle file handling as sd operations
--handle normal printing as printing from sd card
-
-infos:
--webinterface sd upload action Location: http://192.168.178.67/api/files/sdcard/cfffp_~1.gco
-	- uploads the file and automatically triggers an upload to the sd card
-	- Deactivate autoprint
-
-	octoprint\printer\standard.py:
-		plugin_manager().get_hooks("octoprint.printer.sdcardupload")
-
-	octoprint\server\api\files.py: (line 226)
-		@api.route("/files/<string:target>", methods=["POST"]) #handles sd upload, select and starts stream and print
-
-Scenario 1 : pi as flashdrive:
-
-upload directory = mounted image / uploaddir separate from the image
-normal serial communication
-
-Scenario 2 : pi only connected via uart separate flshdrive on the printer:
-
--adaptation of the upload process for bin files
--no streaming and printing during the upload
-
-"""
-
 
 class Sla_printer(Printer):
 
@@ -97,7 +57,6 @@ class Sla_printer(Printer):
 		Select file using gcode command via self._comm.selectFile()
 		add tags = "source:plugin", "Plugin:Chituboard"
 		modify self._updateProgressData
-		modify s
 		"""
 		printTime = None
 		if self._comm is None or (self._comm.isBusy() or self._comm.isStreaming()):
@@ -128,14 +87,8 @@ class Sla_printer(Printer):
 			except Exception as inst:
 				self._logger.debug("yaml load output failed, analysis type:", inst)
 				sliced_model_file = file_format.read(Path(path_on_disk))	
-			# ~ file_format = get_file_format(path_on_disk)
-			# generate sliced_model_file by retrieving file metadata
-			# add classmethod to create object using metadata dict
-			# compute end_byte_offset_by_layer or layer table in at this time
-			# add layer table and print params as optional dicts
-			# ~ sliced_model_file = file_format.read(Path(path_on_disk))
+
 			printTime = sliced_model_file.print_time_secs
-			# ~ self._sliced_model_file = sliced_model_file
 			self._logger.info("print time: ", printTime)
 			self._logger.info("Path: %s" % path_on_disk)
 			path_in_storage = self._fileManager.path_in_storage(origin, path_on_disk)
@@ -148,7 +101,7 @@ class Sla_printer(Printer):
 		self._printAfterSelect = printAfterSelect
 		self._posAfterSelect = pos
 		sd = True
-		# ~ Printer.select_file(self, path, sd, printAfterSelect, user, pos)
+
 		self._comm.selectFile(
 			path_on_disk,
 			sd,
@@ -156,7 +109,7 @@ class Sla_printer(Printer):
 			tags=kwargs.get("tags",set()) | {"trigger:printer.commands", "trigger:printer.select_file","source:plugin", "Plugin:Chituboard", "filename:'%s'" % path_on_disk}
 		)
 		
-		self._updateProgressData()#printTime=printTime)
+		self._updateProgressData()
 		self._setCurrentZ(None)
 		
 	def unselect_file(self, *args, **kwargs):
@@ -172,14 +125,14 @@ class Sla_printer(Printer):
 		"""G0 Z{z_dist_mm:.1f} F600 I0
 		Finish copying jog method from octoprint.printer.standard.printer
 		"""
-		if isinstance(axes, basestring):
+		if isinstance(axes, str):  # Changed from basestring
 			# legacy parameter format, there should be an amount as first anonymous positional arguments too
 			axis = axes
 
 			if not len(args) >= 1:
 				raise ValueError("amount not set")
 			amount = args[0]
-			if not isinstance(amount, (int, long, float)):
+			if not isinstance(amount, (int, float)):  # Removed long
 				raise ValueError(
 					"amount must be a valid number: {amount}".format(amount=amount)
 				)
@@ -211,7 +164,7 @@ class Sla_printer(Printer):
 		chitusystems resin printers only have one moveable Z axis. G28 Z0
 		"""
 		if not isinstance(axes, (list, tuple)):
-			if isinstance(axes, basestring):
+			if isinstance(axes, str):  # Changed from basestring
 				axes = [axes]
 			else:
 				raise ValueError(
@@ -249,7 +202,6 @@ class Sla_printer(Printer):
 			self.on_comm_print_job_cancelled(suppress_script=True, user=user)
 			self._comm._changeState(self._comm.STATE_OPERATIONAL)
 			self.unselect_file()
-			# ~ self._sliced_model_file = None
 			# now make sure we actually do something, up until now we only filled up the queue
 			self._comm._continue_sending()
 
@@ -263,7 +215,6 @@ class Sla_printer(Printer):
 		
 		There is a 3-5 second delay between when the command is sent
 		and the printer actually actually responding.
-		
 		"""
 		if self._comm is None:
 			self._logger.info("paused print, _comm is None")
@@ -281,12 +232,9 @@ class Sla_printer(Printer):
 					"M25 I0",
 					force=True,
 					cmd_type = "pause_print",
-					#on_sent=self._comm._changeState(self._comm.STATE_PAUSED),
 					tags=kwargs.get("tags", set()) | {"trigger:printer.commands", "trigger:printer.pause_print", "source:plugin", "Plugin:Chituboard"})
 				self._logger.info("paused print, sent M25")
 				self.on_comm_print_job_paused(suppress_script=True, user=user)
-				# now make sure we actually do something, up until now we only filled up the queue
-				# ~ self._comm._continue_sending()
 				self._logger.info("paused print, sent M25")
 		except Exception:
 			self._logger.exception("Error while trying to pause print")
@@ -312,11 +260,8 @@ class Sla_printer(Printer):
 					force=True,
 					on_sent=self._comm._changeState(self._comm.STATE_PRINTING),
 					tags=kwargs.get("tags", set()) | {"trigger:printer.commands", "trigger:printer.resume_print", "source:plugin", "Plugin:Chituboard"})
-				# ~ self._comm._changeState(self.STATE_PRINTING)
 				self.on_comm_print_job_resumed(suppress_script=True, user=user)
-				# now make sure we actually do something, up until now we only filled up the queue
-				# ~ self._comm._continue_sending()
-				self._logger.info("paused print, sent M25")
+				self._logger.info("resumed print, sent M24")
 		except Exception:
 			self._logger.exception("Error while trying to resume print")
 			self._comm._trigger_error(get_exception_string(), "resume_print")
@@ -336,7 +281,6 @@ class Sla_printer(Printer):
 				or not self._comm.isOperational()
 				or self._comm.isPrinting()
 			):
-				
 				return
 
 			with self._selectedFileMutex:
@@ -349,8 +293,7 @@ class Sla_printer(Printer):
 			self._lastProgressReport = None
 			self._updateProgressData()
 			self._setCurrentZ(None)
-			cur_file, tags = self.comm_start_print(pos=pos,
-			user=user, external_sd=False)
+			cur_file, tags = self.comm_start_print(pos=pos, user=user, external_sd=False)
 			try:
 				with self._comm._jobLock:
 					self._comm._consecutive_not_sd_printing = 0
@@ -372,7 +315,6 @@ class Sla_printer(Printer):
 							cmd_type = "select_file",
 							part_of_job=True,
 							tags=tags)
-							# ~ tags=tags | {"trigger:comm.start_print",}),
 						self._logger.info("selected file")
 						self._logger.info("current file pos: ", self._comm._currentFile.pos)
 					self._logger.info("current file pos: ", self._comm._currentFile.pos)
@@ -385,10 +327,8 @@ class Sla_printer(Printer):
 							filename=cur_file
 						),
 						cmd_type = "start_print",
-						# ~ part_of_job=True,
 						on_sent=self._comm._changeState(self._comm.STATE_PRINTING),
 						tags=tags)
-						# ~ | {"trigger:comm.start_print",})
 					self._logger.info("start print, send M6030 <filename>", str(user))
 										
 				# now make sure we actually do something, up until now we only filled up the queue
@@ -435,8 +375,9 @@ class Sla_printer(Printer):
 		if self.fileType == "gcode": 
 			ret = Printer.add_sd_file(self, filename, path, on_success, on_failure, *args, **kwargs)
 		elif self.fileType == "sla_bin":
-			on_success()
-			print("printjob canceled")
+			if on_success:
+				on_success()
+			print("SLA file upload completed")
 			
 	def commands(self, commands, 
 		cmd_type=None, 
@@ -460,61 +401,11 @@ class Sla_printer(Printer):
 		for command in commands:
 			self._comm.sendCommand(command, cmd_type=cmd_type, part_of_job=part_of_job, tags=tags, force=force)
 			
-	# ~ def on_comm_file_selected(self, full_path, size, sd, user=None):
-		# ~ filename = None
-		# ~ if full_path is not None:
-			# ~ payload = self._payload_for_print_job_event(
-				# ~ location=FileDestinations.SDCARD if sd else FileDestinations.LOCAL,
-				# ~ print_job_file=full_path,
-				# ~ print_job_user=user,
-				# ~ action_user=user,
-			# ~ )
-			# ~ filename = Path(full_path).name
-			# ~ eventManager().fire(Events.FILE_SELECTED, payload)
-			# ~ self._logger_job.info(
-				# ~ "Print job selected - origin: {}, path: {}, owner: {}, user: {}".format(
-					# ~ payload.get("origin"),
-					# ~ payload.get("path"),
-					# ~ payload.get("owner"),
-					# ~ payload.get("user"),
-				# ~ )
-			# ~ )
-		# ~ else:
-			# ~ eventManager().fire(Events.FILE_DESELECTED)
-			# ~ self._logger_job.info(
-				# ~ "Print job deselected - user: {}".format(user if user else "n/a")
-			# ~ )
-		# ~ estimatedprintTime = None
-		# ~ if filename is not None:
-			# ~ file_format = get_file_format("/home/pi/.octoprint/uploads/resin/"+filename)
-			# ~ sliced_model_file = file_format.read(Path("/home/pi/.octoprint/uploads/resin/"+filename))
-			# ~ estimatedprintTime = sliced_model_file.print_time_secs
-			# ~ self._selectedFile["estimatedPrintTime"] = estimatedprintTime
-			
-		# ~ self._setJobData(full_path, size, sd, user=user)
-		# ~ if self._selectedFile is not None:
-			# ~ self._selectedFile["estimatedPrintTime"] = estimatedprintTime
-			# ~ self._selectedFile["estimatedPrintTimeType"] = "analysis"
-		# ~ self._stateMonitor.set_state(
-			# ~ self._dict(
-				# ~ text=self.get_state_string(),
-				# ~ flags=self._getStateFlags(),
-				# ~ error=self.get_error(),
-			# ~ )
-		# ~ )
-		
-		# ~ self._create_estimator()
-		
-		# ~ if self._printAfterSelect:
-			# ~ self._printAfterSelect = False
-			# ~ self.start_print(pos=self._posAfterSelect, user=user)
-	
 	def get_fileType(self,path):
 		tree = full_extension_tree()["machinecode"]
 
 		for key in tree:
 			if valid_file_type(path,type=key):
-				#self.fileType = key
 				return key
 
 		return None
@@ -522,14 +413,18 @@ class Sla_printer(Printer):
 	def get_current_layer(self):
 		filepos = self.get_file_position()
 		current_layer = "-"
-		if filepos:
+		if filepos and self._sliced_model_file:
 			filepos = filepos["pos"]
 			if filepos == 0:
 				current_layer = 1
 			else:
-				current_layer = (
-					self._sliced_model_file.end_byte_offset_by_layer.index(filepos)+ 1
-				)
+				try:
+					current_layer = (
+						self._sliced_model_file.end_byte_offset_by_layer.index(filepos) + 1
+					)
+				except (ValueError, AttributeError):
+					# If filepos not found in list or attribute doesn't exist
+					current_layer = "-"
 		return current_layer
 
 	def split_path(self, path):
@@ -541,39 +436,36 @@ class Sla_printer(Printer):
 			return self.join_path(*split[:-1]), split[-1]
 
 
+# Regular expressions for parsing printer responses
 REGEX_XYZ0 = re.compile(r"(?P<axis>[XYZ])(?=[XYZ]|\s|$)")
 REGEX_XYZE0 = re.compile(r"(?P<axis>[XYZE])(?=[XYZE]|\s|$)")
 parse_m4000 = re.compile('B:(\d+)\/(\d+)')
 regex_sdPrintingByte = re.compile(r"(?P<current>[0-9]+)/(?P<total>[0-9]+)")
-"""Regex matching SD printing status reports.
-
-Groups will be as follows:
-
-  * ``current``: current byte position in file being printed
-  * ``total``: total size of file being printed
-"""
 
 class gcode_modifier():
+	"""
+	Class for modifying G-code commands to work with Chituboard firmware
+	"""
 	def __init__(self):
-		# ~ self._printer = PrinterInterface
 		self._logged_replacement = {}
 		self._logger = logging.getLogger("octoprint.plugin")
-		pass
 
-	def get_gcode_send_modifier(self, comm_instance, phase, cmd, cmd_type, gcode,subcode=None , tags=None, *args, **kwargs):
-		if cmd.upper().startswith('M110'): #suppress line reset
+	def get_gcode_send_modifier(self, comm_instance, phase, cmd, cmd_type, gcode, subcode=None, tags=None, *args, **kwargs):
+		"""
+		Modify G-code commands before they are sent to the printer
+		"""
+		if cmd.upper().startswith('M110'): # suppress line reset
 			return (None, )
-		# ~ elif gcode == "M105":
-			# ~ return "M4000", cmd_type
-		# ~ elif gcode == "M25" and "trigger:comm.cancel" in tags:
-			# ~ return "M33", cmd_type
 		else:
 			return None
 	
 	def get_gcode_queuing_modifier(self, comm_instance, phase, cmd, cmd_type, gcode, subcode=None, tags=None, *args, **kwargs):
+		"""
+		Modify G-code commands in the queue before they are processed
+		"""
 		if gcode == "M105" and cmd_type == "temperature_poll":
 			return "M4000", cmd_type
 		elif gcode == "M25" and "trigger:comm.cancel" in tags:
 			return "M33", cmd_type
-	
-		
+		else:
+			return None

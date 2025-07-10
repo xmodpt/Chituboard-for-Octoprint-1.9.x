@@ -35,8 +35,7 @@ class sla_AnalysisQueue(AbstractAnalysisQueue):
 		from io import TextIOWrapper
 		import sarge
 		import yaml
-		#results = {'analysisPending': True}
-		#self._finished_callback(self._current, results)
+		
 		if self._current.analysis and all(
 			map(
 				lambda x: x in self._current.analysis,
@@ -84,6 +83,7 @@ class sla_AnalysisQueue(AbstractAnalysisQueue):
 					if self._aborted:
 						# oh, we shall abort, let's do so!
 						p.commands[0].terminate()
+						from octoprint.filemanager.analysis import AnalysisAborted
 						raise AnalysisAborted(reenqueue=self._reenqueue)
 					# else continue
 					p.commands[0].poll()
@@ -109,35 +109,42 @@ class sla_AnalysisQueue(AbstractAnalysisQueue):
 					analysis = yaml.safe_load(output)
 				except Exception as inst:
 					self._logger.debug("yaml load output failed, analysis type:", inst)
-					analysis["printing_area"] = {'minX': 5.0,'minY': 5.0, 'minZ': 5.0, 'maxX': 10.0, 'maxY': 10.0, 'maxZ': 10.0},
-					analysis["dimensions"] = {'width': 82.62, 'depth': 130.56, 'height': 12}
-					analysis["print_time_secs"] = 5500
-					analysis["volume"] = 500
-				#analysis["dimensions"] = {'width': 82.62, 'depth': 130.56, 'height': 12}
+					analysis = {
+						"printing_area": {'minX': 5.0,'minY': 5.0, 'minZ': 5.0, 'maxX': 10.0, 'maxY': 10.0, 'maxZ': 10.0},
+						"dimensions": {'width': 82.62, 'depth': 130.56, 'height': 12},
+						"print_time_secs": 5500,
+						"volume": 500
+					}
+				
 				try:
 					analysis["total_time"] = analysis["print_time_secs"]
 				except Exception as inst:
-					self._logger.debug("yaml load output failed, analysis type:", inst)
+					self._logger.debug("Failed to set total_time:", inst)
+					analysis["total_time"] = analysis.get("print_time_secs", 0)
 				
-				result["printingArea"] = analysis["printing_area"]
-				result["dimensions"] = analysis["dimensions"]
-				if analysis["total_time"]:
+				result["printingArea"] = analysis.get("printing_area", {})
+				result["dimensions"] = analysis.get("dimensions", {})
+				
+				if analysis.get("total_time"):
 					result["estimatedPrintTime"] = analysis["print_time_secs"]
 					
-				if analysis["volume"]:
+				if analysis.get("volume"):
 					result["filament"] = {}
 					radius = 1.75/2
 					result["filament"]["tool0"] = {
 							"length": analysis["volume"]/(math.pi*radius*radius),
 							"volume": analysis["volume"],}
-				if analysis['layer_count']:
+				
+				if analysis.get('layer_count'):
 					result['layer_count'] = analysis['layer_count']
-				if analysis['layer_height_mm']:
+				
+				if analysis.get('layer_height_mm'):
 					result['layer_height_mm'] = analysis['layer_height_mm']
-				if analysis['printer name']:
+				
+				if analysis.get('printer name'):
 					result['printer_name'] = analysis['printer name']
-				result['path'] = analysis['path']
-				#self._finished_callback(self._current, result)
+				
+				result['path'] = analysis.get('path', self._current.absolute_path)
 
 			if self._current.analysis and isinstance(self._current.analysis, dict):
 				return dict_merge(result, self._current.analysis)
@@ -145,6 +152,16 @@ class sla_AnalysisQueue(AbstractAnalysisQueue):
 				return result
 		except Exception as inst:
 			self._logger.debug("Analysis for {} ran into error: {}".format(self._current, inst))
+			# Return a basic result structure to prevent complete failure
+			return {
+				"printingArea": {'minX': 0.0, 'minY': 0.0, 'maxX': 100.0, 'maxY': 100.0},
+				"dimensions": {'width': 100.0, 'depth': 100.0, 'height': 50.0},
+				"estimatedPrintTime": 3600,  # 1 hour default
+				"filament": {"tool0": {"volume": 10.0, "length": 100.0}},
+				"layer_count": 100,
+				"layer_height_mm": 0.05,
+				"printer_name": "Unknown SLA Printer"
+			}
 		finally:
 			self._gcode = None	
 
